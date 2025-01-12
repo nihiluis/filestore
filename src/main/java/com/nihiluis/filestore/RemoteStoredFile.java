@@ -40,6 +40,9 @@ public class RemoteStoredFile extends PanacheEntityBase {
         this.uploadDate = Instant.now();
     }
 
+    // need a create method here AI!
+
+
     public static RemoteStoredFile findById(Long id) {
         return find("id", id).firstResult();
     }

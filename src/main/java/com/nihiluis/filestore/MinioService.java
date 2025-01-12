@@ -23,17 +23,24 @@ public class MinioService {
     @ConfigProperty(name = "minio.bucket-name")
     String bucketName;
 
+    public InputStream getObjectContent(String objectName) throws MinioException, IOException, NoSuchAlgorithmException, InvalidKeyException {
+        return minioClient.getObject(
+                GetObjectArgs.builder()
+                        .bucket(bucketName)
+                        .object(objectName)
+                        .build()
+        );
+    }
+
     public FileWithMetadata getObject(String objectName) throws MinioException, IOException, NoSuchAlgorithmException, InvalidKeyException {
-        // First get the metadata
-        StatObjectResponse stat = minioClient.statObject(
+        var stat = minioClient.statObject(
             StatObjectArgs.builder()
                 .bucket(bucketName)
                 .object(objectName)
                 .build()
         );
 
-        // Then get the content stream
-        InputStream is = minioClient.getObject(
+        var is = minioClient.getObject(
             GetObjectArgs.builder()
                 .bucket(bucketName)
                 .object(objectName)

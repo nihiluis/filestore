@@ -57,4 +57,6 @@ public class MinioService {
         );
     }
 
+    // need a putobject minio method here ai!
+
 }

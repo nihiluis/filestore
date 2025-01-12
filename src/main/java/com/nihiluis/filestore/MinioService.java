@@ -57,6 +57,15 @@ public class MinioService {
         );
     }
 
-    // need a putobject minio method here ai!
+    public void putObject(String objectName, java.io.File file) throws Exception {
+        minioClient.putObject(
+            PutObjectArgs.builder()
+                .bucket(bucketName)
+                .object(objectName)
+                .contentType(Files.probeContentType(file.toPath()))
+                .stream(Files.newInputStream(file.toPath()), file.length(), -1)
+                .build()
+        );
+    }
 
 }

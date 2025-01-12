@@ -70,7 +70,16 @@ public class MinioService {
         );
     }
 
-    // need a method here that generates a file url to download from minio AI!
+    public String getPresignedObjectUrl(String objectName) throws MinioException, IOException, NoSuchAlgorithmException, InvalidKeyException {
+        return minioClient.getPresignedObjectUrl(
+            io.minio.GetPresignedObjectUrlArgs.builder()
+                .method(io.minio.http.Method.GET)
+                .bucket(bucketName)
+                .object(objectName)
+                .expiry(60 * 60) // 1 hour expiration
+                .build()
+        );
+    }
 
     public String getBucketName() {
         return bucketName;

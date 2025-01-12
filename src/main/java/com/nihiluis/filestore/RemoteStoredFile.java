@@ -27,7 +27,6 @@ public class RemoteStoredFile extends PanacheEntityBase {
     public Long id;
 
     public RemoteStoredFile() {
-        // Default constructor
     }
 
     public RemoteStoredFile(String originalFilename, String storedFilename, String contentType, 
@@ -41,15 +40,7 @@ public class RemoteStoredFile extends PanacheEntityBase {
         this.uploadDate = Instant.now();
     }
 
-    public String getFullStoragePath() {
-        return bucketName + "/" + storagePath + "/" + storedFilename;
-    }
-
-    public boolean isValid() {
-        return originalFilename != null && storedFilename != null && 
-               contentType != null && fileSize > 0 && 
-               bucketName != null && storagePath != null;
-    }
+    // impl find by id with active pattern AI!
 
     @Override
     public String toString() {

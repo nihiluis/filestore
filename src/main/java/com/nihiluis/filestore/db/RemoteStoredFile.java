@@ -43,10 +43,11 @@ public class RemoteStoredFile extends PanacheEntityBase {
     public static RemoteStoredFile create(String originalFilename, String storedFilename, 
                                         String contentType, long fileSize, 
                                         String bucketName, String storagePath) {
-        RemoteStoredFile file = new RemoteStoredFile(
+        var file = new RemoteStoredFile(
             originalFilename, storedFilename, contentType, 
             fileSize, bucketName, storagePath
         );
+        // id is populated back into the file variable.
         file.persist();
         return file;
     }

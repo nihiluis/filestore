@@ -2,6 +2,8 @@ package com.nihiluis.filestore;
 
 import io.minio.GetObjectArgs;
 import io.minio.MinioClient;
+import io.minio.StatObjectArgs;
+import io.minio.StatObjectResponse;
 import io.minio.errors.MinioException;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -21,16 +23,29 @@ public class MinioService {
     @ConfigProperty(name = "minio.bucket-name")
     String bucketName;
 
-    public String getObject(String objectName) throws MinioException, IOException, NoSuchAlgorithmException, InvalidKeyException {
-        try (InputStream is = minioClient.getObject(
-                GetObjectArgs.builder()
-                        .bucket(bucketName)
-                        .object(objectName)
-                        .build())
-        ) {
-            // how do I get the file metadata here and the actual file AI!
-            return "";
-        }
+    public FileWithMetadata getObject(String objectName) throws MinioException, IOException, NoSuchAlgorithmException, InvalidKeyException {
+        // First get the metadata
+        StatObjectResponse stat = minioClient.statObject(
+            StatObjectArgs.builder()
+                .bucket(bucketName)
+                .object(objectName)
+                .build()
+        );
+
+        // Then get the content stream
+        InputStream is = minioClient.getObject(
+            GetObjectArgs.builder()
+                .bucket(bucketName)
+                .object(objectName)
+                .build()
+        );
+
+        return new FileWithMetadata(
+            is,
+            stat.userMetadata(),
+            stat.contentType(),
+            stat.size()
+        );
     }
 
 }

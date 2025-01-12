@@ -21,7 +21,19 @@ public class RemoteStoredFileResource {
     @Inject
     private MinioService minioService;
 
-    // need a method that gets the presignedUrl from MinioService for a given objectName ai!
+    @GET
+    @Path("/download/{objectName}")
+    @Produces(MediaType.TEXT_PLAIN)
+    public Response getPresignedUrl(@PathParam("objectName") String objectName) {
+        try {
+            String url = minioService.getPresignedObjectUrl(objectName);
+            return Response.ok(url).build();
+        } catch (Exception e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity("Failed to generate download URL: " + e.getMessage())
+                    .build();
+        }
+    }
 
     @POST
     @Path("/upload")

@@ -1,4 +1,12 @@
 # filestore
+This is a simple service that wraps minio to provide a simple API for storing and retrieving files.
+
+## How to run
+
+Local
+```
+./gradlew quarkusDev
+```
 
 ## Config
 .env

@@ -24,7 +24,7 @@ public class RemoteStoredFileResource {
 
     @GET
     @Path("/download/{objectName}")
-    @Produces(MediaType.TEXT_PLAIN)
+    @Produces(MediaType.APPLICATION_JSON)
     public Response getPresignedUrl(@PathParam("objectName") String objectName) {
         try {
             String url = minioService.getPresignedObjectUrl(objectName);

@@ -9,6 +9,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -59,12 +60,12 @@ public class MinioService {
         );
     }
 
-    public void putObject(String objectName, java.io.File file) throws Exception {
+    public void putObject(String objectName, File file, String contentType) throws Exception {
         minioClient.putObject(
             PutObjectArgs.builder()
                 .bucket(bucketName)
                 .object(objectName)
-                .contentType(Files.probeContentType(file.toPath()))
+                .contentType(contentType != null ? contentType : "application/octet-stream")
                 .stream(Files.newInputStream(file.toPath()), file.length(), -1)
                 .build()
         );
@@ -76,7 +77,7 @@ public class MinioService {
                 .method(io.minio.http.Method.GET)
                 .bucket(bucketName)
                 .object(objectName)
-                .expiry(60 * 60) // 1 hour expiration
+                .expiry(60) // 1 minute expiration
                 .build()
         );
     }

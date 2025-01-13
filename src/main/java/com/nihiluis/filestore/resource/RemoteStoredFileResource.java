@@ -1,22 +1,23 @@
 package com.nihiluis.filestore.resource;
 
+import com.nihiluis.filestore.dto.ErrorResponse;
+import com.nihiluis.filestore.dto.FileUploadResponse;
+import com.nihiluis.filestore.dto.PresignedUrlResponse;
 import com.nihiluis.filestore.minio.MinioService;
 import com.nihiluis.filestore.db.RemoteStoredFile;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
-import jakarta.ws.rs.Consumes;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import org.jboss.resteasy.reactive.RestForm;
 import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 import java.util.UUID;
 
 @Path("/api/v1/file")
 @Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
+@Consumes({MediaType.APPLICATION_JSON, MediaType.MULTIPART_FORM_DATA})
 public class RemoteStoredFileResource {
     @Inject
     private MinioService minioService;
@@ -27,10 +28,11 @@ public class RemoteStoredFileResource {
     public Response getPresignedUrl(@PathParam("objectName") String objectName) {
         try {
             String url = minioService.getPresignedObjectUrl(objectName);
-            return Response.ok(url).build();
+            return Response.ok(new PresignedUrlResponse(url, objectName)).build();
         } catch (Exception e) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .entity("Failed to generate download URL: " + e.getMessage())
+                    .entity(new ErrorResponse("Failed to generate download URL: " + e.getMessage(), 
+                            Response.Status.INTERNAL_SERVER_ERROR.getStatusCode()))
                     .build();
         }
     }
@@ -38,13 +40,25 @@ public class RemoteStoredFileResource {
     @POST
     @Path("/upload")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
-    @Produces(MediaType.APPLICATION_JSON)
     @Transactional
-    public Response uploadFile(FileUpload fileUpload) throws Exception {
+    public Response uploadFile(@RestForm("file") FileUpload fileUpload) throws Exception {
+        if (fileUpload == null || fileUpload.contentType() == null) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(new ErrorResponse("File upload or content type is missing", 
+                            Response.Status.BAD_REQUEST.getStatusCode()))
+                    .build();
+        }
+
+        if (fileUpload.size() > 10 * 1024 * 1024) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(new ErrorResponse("File size is too large", 
+                            Response.Status.BAD_REQUEST.getStatusCode()))
+                    .build();
+        }
+
         var storedFilename = UUID.randomUUID().toString();
         
-        // Store file in Minio
-        minioService.putObject(storedFilename, fileUpload.uploadedFile().toFile());
+        minioService.putObject(storedFilename, fileUpload.uploadedFile().toFile(), fileUpload.contentType());
         
         // Create database record
         var file = RemoteStoredFile.create(
@@ -56,6 +70,11 @@ public class RemoteStoredFileResource {
             "/"
         );
         
-        return Response.ok(file.storedFilename).build();
+        return Response.ok(new FileUploadResponse(
+            file.storedFilename,
+            file.originalFilename,
+            file.contentType,
+            file.fileSize
+        )).build();
     }
 }

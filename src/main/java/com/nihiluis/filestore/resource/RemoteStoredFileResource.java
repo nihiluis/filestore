@@ -12,6 +12,9 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.jboss.resteasy.reactive.RestForm;
 import org.jboss.resteasy.reactive.multipart.FileUpload;
+import org.eclipse.microprofile.openapi.annotations.media.Content;
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 
 import java.util.UUID;
 
@@ -25,9 +28,25 @@ public class RemoteStoredFileResource {
     @GET
     @Path("/download/{objectName}")
     @Produces(MediaType.APPLICATION_JSON)
+    @APIResponse(
+        responseCode = "200",
+        description = "Successfully generated presigned URL",
+        content = @Content(
+            mediaType = MediaType.APPLICATION_JSON,
+            schema = @Schema(implementation = PresignedUrlResponse.class)
+        )
+    )
+    @APIResponse(
+        responseCode = "500",
+        description = "Internal server error",
+        content = @Content(
+            mediaType = MediaType.APPLICATION_JSON,
+            schema = @Schema(implementation = ErrorResponse.class)
+        )
+    )
     public Response getPresignedUrl(@PathParam("objectName") String objectName) {
         try {
-            String url = minioService.getPresignedObjectUrl(objectName);
+            var url = minioService.getPresignedObjectUrl(objectName);
             return Response.ok(new PresignedUrlResponse(url, objectName)).build();
         } catch (Exception e) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
@@ -41,6 +60,22 @@ public class RemoteStoredFileResource {
     @Path("/upload")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Transactional
+    @APIResponse(
+        responseCode = "200",
+        description = "File uploaded successfully",
+        content = @Content(
+            mediaType = MediaType.APPLICATION_JSON,
+            schema = @Schema(implementation = FileUploadResponse.class)
+        )
+    )
+    @APIResponse(
+        responseCode = "400",
+        description = "Bad request",
+        content = @Content(
+            mediaType = MediaType.APPLICATION_JSON,
+            schema = @Schema(implementation = ErrorResponse.class)
+        )
+    )
     public Response uploadFile(@RestForm("file") FileUpload fileUpload) throws Exception {
         if (fileUpload == null || fileUpload.contentType() == null) {
             return Response.status(Response.Status.BAD_REQUEST)

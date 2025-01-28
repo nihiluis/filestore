@@ -1,5 +1,5 @@
 # filestore
-This is a simple service that wraps minio to provide a simple API for storing and retrieving files.
+This is a simple service that wraps minio (or S3) to provide a simple API for storing and retrieving files.
 
 ## How to run
 

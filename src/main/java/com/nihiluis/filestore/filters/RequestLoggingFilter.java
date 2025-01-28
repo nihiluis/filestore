@@ -34,4 +34,4 @@ public class RequestLoggingFilter implements ContainerRequestFilter, ContainerRe
 
         LOG.infof("%d %s %s (%s)", status, method, path, address);
     }
-} 
+}
